@@ -61,11 +61,11 @@ public class UserService {
         
         // Create new user
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
+        user.setId(UUID.randomUUID());
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        
+        user.setVersion(0L);
         userRepository.save(user);
         
         // Generate token for auto-login after registration

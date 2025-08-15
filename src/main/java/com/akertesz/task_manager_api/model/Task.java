@@ -8,10 +8,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "tasks")
@@ -20,18 +23,18 @@ public class Task {
     @Id
     private UUID id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String title;
     
     @Column(length = 1000)
     private String description;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private TaskStatus status;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private TaskPriority priority;
     
     @Column(name = "created_at", nullable = false)
@@ -42,19 +45,25 @@ public class Task {
     
     @Column(name = "due_date")
     private LocalDateTime dueDate;
-
-    @Column(name = "deleted", nullable = false)
-    private boolean deleted;
-
+    
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+    
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+    
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
     
     // Default constructor
     public Task() {
         this.createdAt = LocalDateTime.now();
         this.status = TaskStatus.PENDING;
         this.priority = TaskPriority.MEDIUM;
+        this.isDeleted = false;
+        this.version = 0L;
     }
     
     // Getters and Setters
@@ -63,7 +72,7 @@ public class Task {
     }
     
     public void setId(UUID id) {
-    this.id = id;
+        this.id = id;
     }
     
     public String getTitle() {
@@ -122,24 +131,32 @@ public class Task {
         this.dueDate = dueDate;
     }
     
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
     public User getUser() {
         return user;
     }
-
+    
     public void setUser(User user) {
         this.user = user;
     }
-
+    
     public boolean isDeleted() {
-        return deleted;
+        return isDeleted;
     }
-
+    
     public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
+        this.isDeleted = deleted;
+    }
+    
+    public Long getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
