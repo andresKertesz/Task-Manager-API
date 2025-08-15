@@ -3,7 +3,7 @@ package com.akertesz.task_manager_api.dto;
 public class LoginRequest {
     private String username;
     private String password;
-
+    
     public String getUsername() {
         return username;
     }

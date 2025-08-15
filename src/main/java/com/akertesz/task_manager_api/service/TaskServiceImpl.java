@@ -16,20 +16,24 @@ import com.akertesz.task_manager_api.dto.UpdateTaskRequest;
 import com.akertesz.task_manager_api.model.Task;
 import com.akertesz.task_manager_api.model.TaskPriority;
 import com.akertesz.task_manager_api.model.TaskStatus;
+import com.akertesz.task_manager_api.model.User;
 import com.akertesz.task_manager_api.repository.TaskRepository;
+import com.akertesz.task_manager_api.repository.UserRepository;
 
 @Service
 public class TaskServiceImpl implements TaskService {
     
     private final TaskRepository taskRepository;
-    
+    private final UserRepository userRepository;
     @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
     }
     
     @Override
-    public TaskDto createTask(CreateTaskRequest request) {
+    public TaskDto createTask(CreateTaskRequest request, String username) {
+        User user = userRepository.findByUsername(username);
         Task task = new Task();
         task.setId(UUID.randomUUID());
         task.setTitle(request.getTitle());
@@ -37,27 +41,30 @@ public class TaskServiceImpl implements TaskService {
         task.setPriority(request.getPriority());
         task.setDueDate(request.getDueDate());
         task.setStatus(TaskStatus.PENDING);
-        
+        task.setUser(user);
         Task savedTask = taskRepository.save(task);
         return convertToDto(savedTask);
     }
     
     @Override
-    public Optional<TaskDto> getTaskById(UUID id) {
-        return taskRepository.findById(id)
+    public Optional<TaskDto> getTaskById(UUID id, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByIdAndUserAndDeletedFalse(id, user)
                 .map(this::convertToDto);
     }
     
     @Override
-    public List<TaskDto> getAllTasks() {
-        return taskRepository.findAll().stream()
+    public List<TaskDto> getAllTasks(String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByUserAndDeletedFalse(user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public Optional<TaskDto> updateTask(UUID id, UpdateTaskRequest request) {
-        return taskRepository.findById(id)
+    public Optional<TaskDto> updateTask(UUID id, UpdateTaskRequest request, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByIdAndUserAndDeletedFalse(id, user)
                 .map(task -> {
                     if (request.getTitle() != null) {
                         task.setTitle(request.getTitle());
@@ -74,66 +81,74 @@ public class TaskServiceImpl implements TaskService {
                     if (request.getStatus() != null) {
                         task.setStatus(request.getStatus());
                     }
-                    
+                    task.setUser(user);
                     Task updatedTask = taskRepository.save(task);
                     return convertToDto(updatedTask);
                 });
     }
     
     @Override
-    public boolean deleteTask(UUID id) {
-        if (taskRepository.existsById(id)) {
-            taskRepository.deleteById(id);
+    public boolean deleteTask(UUID id, String username) {
+        User user = userRepository.findByUsername(username);
+        if (taskRepository.findByIdAndUserAndDeletedFalse(id, user).isPresent()) {
+            taskRepository.deleteTask(id, user);
             return true;
         }
         return false;
     }
     
     @Override
-    public List<TaskDto> getTasksByStatus(TaskStatus status) {
-        return taskRepository.findByStatus(status).stream()
+    public List<TaskDto> getTasksByStatus(TaskStatus status, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByStatusAndUserAndDeletedFalse(status, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public List<TaskDto> getTasksByPriority(TaskPriority priority) {
-        return taskRepository.findByPriority(priority).stream()
+    public List<TaskDto> getTasksByPriority(TaskPriority priority, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByPriorityAndUserAndDeletedFalse(priority, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public List<TaskDto> getOverdueTasks() {
-        return taskRepository.findOverdueTasks(LocalDateTime.now()).stream()
+    public List<TaskDto> getOverdueTasks(String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByDueDateBeforeAndUserAndDeletedFalse(LocalDateTime.now(), user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public List<TaskDto> searchTasksByTitle(String title) {
-        return taskRepository.findByTitleContainingIgnoreCase(title).stream()
+    public List<TaskDto> searchTasksByTitle(String title, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByTitleContainingIgnoreCaseAndUserAndDeletedFalse(title, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public List<TaskDto> getTasksCreatedBetween(LocalDateTime startDate, LocalDateTime endDate) {
-        return taskRepository.findByCreatedAtBetween(startDate, endDate).stream()
+    public List<TaskDto> getTasksCreatedBetween(LocalDateTime startDate, LocalDateTime endDate, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByCreatedAtBetweenAndUserAndDeletedFalse(startDate, endDate, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public List<TaskDto> getTasksOrderedByPriorityAndDueDate() {
-        return taskRepository.findAllOrderByPriorityAndDueDate().stream()
+    public List<TaskDto> getTasksOrderedByPriorityAndDueDate(String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findAllOrderByPriorityAndDueDateAndUserAndDeletedFalse(user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public Optional<TaskDto> changeTaskStatus(UUID id, TaskStatus status) {
-        return taskRepository.findById(id)
+    public Optional<TaskDto> changeTaskStatus(UUID id, TaskStatus status, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByIdAndUserAndDeletedFalse(id, user)
                 .map(task -> {
                     task.setStatus(status);
                     Task updatedTask = taskRepository.save(task);
@@ -142,23 +157,26 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public Optional<TaskDto> changeTaskPriority(UUID id, TaskPriority priority) {
-        return taskRepository.findById(id)
-                .map(task -> {
+    public Optional<TaskDto> changeTaskPriority(UUID id, TaskPriority priority, String username) {
+        User user = userRepository.findByUsername(username);
+        return taskRepository.findByIdAndUserAndDeletedFalse(id, user)
+                .map(task -> {  
                     task.setPriority(priority);
+                    task.setUser(user);
                     Task updatedTask = taskRepository.save(task);
                     return convertToDto(updatedTask);
                 });
     }
     
     @Override
-    public TaskStatistics getTaskStatistics() {
-        long totalTasks = taskRepository.count();
-        long pendingTasks = taskRepository.countByStatus(TaskStatus.PENDING);
-        long inProgressTasks = taskRepository.countByStatus(TaskStatus.IN_PROGRESS);
-        long completedTasks = taskRepository.countByStatus(TaskStatus.COMPLETED);
-        long cancelledTasks = taskRepository.countByStatus(TaskStatus.CANCELLED);
-        long overdueTasks = taskRepository.findOverdueTasks(LocalDateTime.now()).size();
+    public TaskStatistics getTaskStatistics(String username) {
+        User user = userRepository.findByUsername(username);
+        long totalTasks = taskRepository.countByUserAndDeletedFalse(user);
+        long pendingTasks = taskRepository.countByStatusAndUserAndDeletedFalse(TaskStatus.PENDING, user);
+        long inProgressTasks = taskRepository.countByStatusAndUserAndDeletedFalse(TaskStatus.IN_PROGRESS, user);
+        long completedTasks = taskRepository.countByStatusAndUserAndDeletedFalse(TaskStatus.COMPLETED, user);
+        long cancelledTasks = taskRepository.countByStatusAndUserAndDeletedFalse(TaskStatus.CANCELLED, user);
+        long overdueTasks = taskRepository.findByDueDateBeforeAndUserAndDeletedFalse(LocalDateTime.now(), user).size();
         
         // Create maps for tasks by status and priority
         Map<TaskStatus, Long> tasksByStatus = Map.of(
@@ -169,10 +187,10 @@ public class TaskServiceImpl implements TaskService {
         );
         
         Map<TaskPriority, Long> tasksByPriority = Map.of(
-            TaskPriority.URGENT, (long) taskRepository.findByPriority(TaskPriority.URGENT).size(),
-            TaskPriority.HIGH, (long) taskRepository.findByPriority(TaskPriority.HIGH).size(),
-            TaskPriority.MEDIUM, (long) taskRepository.findByPriority(TaskPriority.MEDIUM).size(),
-            TaskPriority.LOW, (long) taskRepository.findByPriority(TaskPriority.LOW).size()
+            TaskPriority.URGENT, (long) taskRepository.findByPriorityAndUserAndDeletedFalse(TaskPriority.URGENT, user).size(),
+            TaskPriority.HIGH, (long) taskRepository.findByPriorityAndUserAndDeletedFalse(TaskPriority.HIGH, user).size(),
+            TaskPriority.MEDIUM, (long) taskRepository.findByPriorityAndUserAndDeletedFalse(TaskPriority.MEDIUM, user).size(),
+            TaskPriority.LOW, (long) taskRepository.findByPriorityAndUserAndDeletedFalse(TaskPriority.LOW, user).size()
         );
         
         return new TaskStatistics(totalTasks, completedTasks, pendingTasks, inProgressTasks, cancelledTasks, overdueTasks, tasksByStatus, tasksByPriority);

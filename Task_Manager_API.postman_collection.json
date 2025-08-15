@@ -2,10 +2,105 @@
 	"info": {
 		"_postman_id": "task-manager-api-collection",
 		"name": "Task Manager API",
-		"description": "Complete collection for the Task Manager REST API with Spring Boot",
+		"description": "Complete collection for the Task Manager REST API with Spring Boot and JWT Authentication",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\",\n  \"email\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.token);",
+									"        console.log('JWT Token saved:', response.token);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.token);",
+									"        console.log('JWT Token saved:', response.token);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
 		{
 			"name": "Tasks",
 			"item": [
@@ -17,6 +112,10 @@
 							{
 								"key": "Content-Type",
 								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
 							}
 						],
 						"body": {
@@ -40,7 +139,12 @@
 					"name": "Get All Tasks",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks",
 							"host": [
@@ -58,7 +162,12 @@
 					"name": "Get Task by ID",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/1",
 							"host": [
@@ -81,6 +190,10 @@
 							{
 								"key": "Content-Type",
 								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
 							}
 						],
 						"body": {
@@ -105,7 +218,12 @@
 					"name": "Delete Task",
 					"request": {
 						"method": "DELETE",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/1",
 							"host": [
@@ -124,7 +242,12 @@
 					"name": "Get Tasks by Status",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/status/PENDING",
 							"host": [
@@ -144,7 +267,12 @@
 					"name": "Get Tasks by Priority",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/priority/HIGH",
 							"host": [
@@ -164,7 +292,12 @@
 					"name": "Get Overdue Tasks",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/overdue",
 							"host": [
@@ -183,7 +316,12 @@
 					"name": "Search Tasks by Title",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/search?title=documentation",
 							"host": [
@@ -208,7 +346,12 @@
 					"name": "Get Tasks Created Between Dates",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/created-between?startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59",
 							"host": [
@@ -237,7 +380,12 @@
 					"name": "Get Tasks Ordered by Priority and Due Date",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/ordered",
 							"host": [
@@ -256,7 +404,12 @@
 					"name": "Change Task Status",
 					"request": {
 						"method": "PATCH",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/1/status?status=COMPLETED",
 							"host": [
@@ -282,7 +435,12 @@
 					"name": "Change Task Priority",
 					"request": {
 						"method": "PATCH",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/1/priority?priority=URGENT",
 							"host": [
@@ -308,7 +466,12 @@
 					"name": "Get Task Statistics",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/api/tasks/statistics",
 							"host": [
@@ -372,6 +535,11 @@
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
 			"type": "string"
 		}
 	]

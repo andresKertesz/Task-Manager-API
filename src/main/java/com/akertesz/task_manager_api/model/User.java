@@ -1,25 +1,48 @@
 package com.akertesz.task_manager_api.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "app_user")
 public class User implements UserDetails {
     @Id
     private String id;
+    
+    @Column(unique = true, nullable = false)
     private String username;
+    
+    @Column(nullable = false)
     private String password;
+    
+    @Column(unique = true, nullable = false)
     private String email;
+    
+    @Column(nullable = false)
     private boolean enabled = true;
+    
+    @Column(nullable = false)
     private boolean accountNonExpired = true;
+    
+    @Column(nullable = false)
     private boolean accountNonLocked = true;
+    
+    @Column(nullable = false)
     private boolean credentialsNonExpired = true;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Task> tasks;
 
     public String getId() {
         return id;
