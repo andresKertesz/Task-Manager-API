@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import com.akertesz.task_manager_api.config.JwtUtil;
 import com.akertesz.task_manager_api.dto.LoginRequest;
 import com.akertesz.task_manager_api.dto.LoginResponse;
 import com.akertesz.task_manager_api.dto.RegisterRequest;
+import com.akertesz.task_manager_api.exception.InvalidRequestException;
 import com.akertesz.task_manager_api.model.User;
 import com.akertesz.task_manager_api.repository.UserRepository;
 
@@ -42,21 +44,23 @@ public class UserService {
                 String token = jwtUtil.generateToken(loginRequest.getUsername());
                 return new LoginResponse(Optional.of(token), "Login successful");
             } else {
-                return new LoginResponse(Optional.empty(), "Authentication failed");
+                throw new BadCredentialsException("Authentication failed");
             }
+        } catch (BadCredentialsException e) {
+            throw e; // Re-throw BadCredentialsException for proper handling
         } catch (Exception e) {
-            return new LoginResponse(Optional.empty(), "Invalid username or password");
+            throw new BadCredentialsException("Invalid username or password");
         }
     }
 
     public LoginResponse register(RegisterRequest registerRequest) {
         // Check if user already exists
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
-            return new LoginResponse(Optional.empty(), "Username already exists");
+            throw new InvalidRequestException("Username already exists");
         }
         
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            return new LoginResponse(Optional.empty(), "Email already exists");
+            throw new InvalidRequestException("Email already exists");
         }
         
         // Create new user

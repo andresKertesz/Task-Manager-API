@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import com.akertesz.task_manager_api.dto.CreateTaskRequest;
 import com.akertesz.task_manager_api.dto.TaskDto;
 import com.akertesz.task_manager_api.dto.UpdateTaskRequest;
+import com.akertesz.task_manager_api.exception.TaskNotFoundException;
+import com.akertesz.task_manager_api.exception.UserNotFoundException;
 import com.akertesz.task_manager_api.model.Task;
 import com.akertesz.task_manager_api.model.TaskPriority;
 import com.akertesz.task_manager_api.model.TaskStatus;
@@ -34,6 +36,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskDto createTask(CreateTaskRequest request, String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         Task task = new Task();
         task.setId(UUID.randomUUID());
         task.setTitle(request.getTitle());
@@ -47,59 +53,80 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public Optional<TaskDto> getTaskById(UUID id, String username) {
+    public TaskDto getTaskById(UUID id, String username) {
         User user = userRepository.findByUsername(username);
-        return taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
-                .map(this::convertToDto);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
+        Task task = taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        return convertToDto(task);
     }
     
     @Override
     public List<TaskDto> getAllTasks(String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findByUserAndIsDeletedFalse(user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public Optional<TaskDto> updateTask(UUID id, UpdateTaskRequest request, String username) {
+    public TaskDto updateTask(UUID id, UpdateTaskRequest request, String username) {
         User user = userRepository.findByUsername(username);
-        return taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
-                .map(task -> {
-                    if (request.getTitle() != null) {
-                        task.setTitle(request.getTitle());
-                    }
-                    if (request.getDescription() != null) {
-                        task.setDescription(request.getDescription());
-                    }
-                    if (request.getPriority() != null) {
-                        task.setPriority(request.getPriority());
-                    }
-                    if (request.getDueDate() != null) {
-                        task.setDueDate(request.getDueDate());
-                    }
-                    if (request.getStatus() != null) {
-                        task.setStatus(request.getStatus());
-                    }
-                    task.setUser(user);
-                    Task updatedTask = taskRepository.save(task);
-                    return convertToDto(updatedTask);
-                });
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
+        Task task = taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        
+        if (request.getTitle() != null) {
+            task.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            task.setDescription(request.getDescription());
+        }
+        if (request.getPriority() != null) {
+            task.setPriority(request.getPriority());
+        }
+        if (request.getDueDate() != null) {
+            task.setDueDate(request.getDueDate());
+        }
+        if (request.getStatus() != null) {
+            task.setStatus(request.getStatus());
+        }
+        task.setUser(user);
+        Task updatedTask = taskRepository.save(task);
+        return convertToDto(updatedTask);
     }
     
     @Override
     public boolean deleteTask(UUID id, String username) {
         User user = userRepository.findByUsername(username);
-        if (taskRepository.findByIdAndUserAndIsDeletedFalse(id, user).isPresent()) {
-            taskRepository.deleteTask(id, user);
-            return true;
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
         }
-        return false;
+        
+        Task task = taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        
+        taskRepository.deleteTask(id, user);
+        return true;
     }
     
     @Override
     public List<TaskDto> getTasksByStatus(TaskStatus status, String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findByStatusAndUserAndIsDeletedFalse(status, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -108,6 +135,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDto> getTasksByPriority(TaskPriority priority, String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findByPriorityAndUserAndIsDeletedFalse(priority, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -116,6 +147,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDto> getOverdueTasks(String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findByDueDateBeforeAndUserAndIsDeletedFalse(LocalDateTime.now(), user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -124,6 +159,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDto> searchTasksByTitle(String title, String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findByTitleContainingIgnoreCaseAndUserAndIsDeletedFalse(title, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -132,6 +171,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDto> getTasksCreatedBetween(LocalDateTime startDate, LocalDateTime endDate, String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findByCreatedAtBetweenAndUserAndIsDeletedFalse(startDate, endDate, user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -140,37 +183,53 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDto> getTasksOrderedByPriorityAndDueDate(String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         return taskRepository.findAllOrderByPriorityAndDueDateAndUserAndIsDeletedFalse(user).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public Optional<TaskDto> changeTaskStatus(UUID id, TaskStatus status, String username) {
+    public TaskDto changeTaskStatus(UUID id, TaskStatus status, String username) {
         User user = userRepository.findByUsername(username);
-        return taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
-                .map(task -> {
-                    task.setStatus(status);
-                    Task updatedTask = taskRepository.save(task);
-                    return convertToDto(updatedTask);
-                });
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
+        Task task = taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        
+        task.setStatus(status);
+        Task updatedTask = taskRepository.save(task);
+        return convertToDto(updatedTask);
     }
     
     @Override
-    public Optional<TaskDto> changeTaskPriority(UUID id, TaskPriority priority, String username) {
+    public TaskDto changeTaskPriority(UUID id, TaskPriority priority, String username) {
         User user = userRepository.findByUsername(username);
-        return taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
-                .map(task -> {  
-                    task.setPriority(priority);
-                    task.setUser(user);
-                    Task updatedTask = taskRepository.save(task);
-                    return convertToDto(updatedTask);
-                });
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
+        Task task = taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        
+        task.setPriority(priority);
+        task.setUser(user);
+        Task updatedTask = taskRepository.save(task);
+        return convertToDto(updatedTask);
     }
     
     @Override
     public TaskStatistics getTaskStatistics(String username) {
         User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
         long totalTasks = taskRepository.countByUserAndIsDeletedFalse(user);
         long pendingTasks = taskRepository.countByStatusAndUserAndIsDeletedFalse(TaskStatus.PENDING, user);
         long inProgressTasks = taskRepository.countByStatusAndUserAndIsDeletedFalse(TaskStatus.IN_PROGRESS, user);
