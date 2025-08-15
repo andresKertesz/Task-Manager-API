@@ -1,5 +1,25 @@
 package com.akertesz.task_manager_api.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.akertesz.task_manager_api.dto.CreateTaskRequest;
 import com.akertesz.task_manager_api.dto.TaskDto;
 import com.akertesz.task_manager_api.dto.UpdateTaskRequest;
@@ -7,15 +27,8 @@ import com.akertesz.task_manager_api.model.TaskPriority;
 import com.akertesz.task_manager_api.model.TaskStatus;
 import com.akertesz.task_manager_api.service.TaskService;
 import com.akertesz.task_manager_api.service.TaskStatistics;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -45,25 +58,28 @@ public class TaskController {
     
     // Get a task by ID
     @GetMapping("/{id}")
-    public ResponseEntity<TaskDto> getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id)
+    public ResponseEntity<TaskDto> getTaskById(@PathVariable String id) {
+        UUID uuid = UUID.fromString(id);
+        return taskService.getTaskById(uuid)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
     // Update a task
     @PutMapping("/{id}")
-    public ResponseEntity<TaskDto> updateTask(@PathVariable Long id, 
+    public ResponseEntity<TaskDto> updateTask(@PathVariable String id, 
                                             @Valid @RequestBody UpdateTaskRequest request) {
-        return taskService.updateTask(id, request)
+        UUID uuid = UUID.fromString(id);
+        return taskService.updateTask(uuid, request)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
     // Delete a task
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        if (taskService.deleteTask(id)) {
+    public ResponseEntity<Void> deleteTask(@PathVariable String id) {
+        UUID uuid = UUID.fromString(id);
+        if (taskService.deleteTask(uuid)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
@@ -115,18 +131,20 @@ public class TaskController {
     
     // Change task status
     @PatchMapping("/{id}/status")
-    public ResponseEntity<TaskDto> changeTaskStatus(@PathVariable Long id, 
+    public ResponseEntity<TaskDto> changeTaskStatus(@PathVariable String id, 
                                                   @RequestParam TaskStatus status) {
-        return taskService.changeTaskStatus(id, status)
+        UUID uuid = UUID.fromString(id);
+        return taskService.changeTaskStatus(uuid, status)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
     // Change task priority
     @PatchMapping("/{id}/priority")
-    public ResponseEntity<TaskDto> changeTaskPriority(@PathVariable Long id, 
+    public ResponseEntity<TaskDto> changeTaskPriority(@PathVariable String id, 
                                                      @RequestParam TaskPriority priority) {
-        return taskService.changeTaskPriority(id, priority)
+        UUID uuid = UUID.fromString(id);
+        return taskService.changeTaskPriority(uuid, priority)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

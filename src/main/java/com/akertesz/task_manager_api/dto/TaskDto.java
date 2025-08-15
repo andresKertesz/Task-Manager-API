@@ -1,11 +1,12 @@
 package com.akertesz.task_manager_api.dto;
 
-import com.akertesz.task_manager_api.model.TaskPriority;
-import com.akertesz.task_manager_api.model.TaskStatus;
 import java.time.LocalDateTime;
 
+import com.akertesz.task_manager_api.model.TaskPriority;
+import com.akertesz.task_manager_api.model.TaskStatus;
+
 public class TaskDto {
-    private Long id;
+    private String id;
     private String title;
     private String description;
     private TaskStatus status;
@@ -18,7 +19,7 @@ public class TaskDto {
     public TaskDto() {}
     
     // Constructor with all fields
-    public TaskDto(Long id, String title, String description, TaskStatus status, 
+    public TaskDto(String id, String title, String description, TaskStatus status, 
                    TaskPriority priority, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime dueDate) {
         this.id = id;
         this.title = title;
@@ -31,11 +32,11 @@ public class TaskDto {
     }
     
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
     

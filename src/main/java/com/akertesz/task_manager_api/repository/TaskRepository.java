@@ -1,18 +1,20 @@
 package com.akertesz.task_manager_api.repository;
 
-import com.akertesz.task_manager_api.model.Task;
-import com.akertesz.task_manager_api.model.TaskPriority;
-import com.akertesz.task_manager_api.model.TaskStatus;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.akertesz.task_manager_api.model.Task;
+import com.akertesz.task_manager_api.model.TaskPriority;
+import com.akertesz.task_manager_api.model.TaskStatus;
 
 @Repository
-public interface TaskRepository extends JpaRepository<Task, Long> {
+public interface TaskRepository extends JpaRepository<Task, UUID> {
     
     // Find tasks by status
     List<Task> findByStatus(TaskStatus status);

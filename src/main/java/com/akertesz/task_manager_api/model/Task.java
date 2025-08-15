@@ -1,15 +1,22 @@
 package com.akertesz.task_manager_api.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tasks")
 public class Task {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
     
     @Column(nullable = false)
     private String title;
@@ -42,12 +49,12 @@ public class Task {
     }
     
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
     
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(UUID id) {
+    this.id = id;
     }
     
     public String getTitle() {

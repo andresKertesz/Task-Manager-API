@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskDto createTask(CreateTaskRequest request) {
         Task task = new Task();
+        task.setId(UUID.randomUUID());
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setPriority(request.getPriority());
@@ -41,7 +43,7 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public Optional<TaskDto> getTaskById(Long id) {
+    public Optional<TaskDto> getTaskById(UUID id) {
         return taskRepository.findById(id)
                 .map(this::convertToDto);
     }
@@ -54,7 +56,7 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public Optional<TaskDto> updateTask(Long id, UpdateTaskRequest request) {
+    public Optional<TaskDto> updateTask(UUID id, UpdateTaskRequest request) {
         return taskRepository.findById(id)
                 .map(task -> {
                     if (request.getTitle() != null) {
@@ -79,7 +81,7 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public boolean deleteTask(Long id) {
+    public boolean deleteTask(UUID id) {
         if (taskRepository.existsById(id)) {
             taskRepository.deleteById(id);
             return true;
@@ -130,7 +132,7 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public Optional<TaskDto> changeTaskStatus(Long id, TaskStatus status) {
+    public Optional<TaskDto> changeTaskStatus(UUID id, TaskStatus status) {
         return taskRepository.findById(id)
                 .map(task -> {
                     task.setStatus(status);
@@ -140,7 +142,7 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public Optional<TaskDto> changeTaskPriority(Long id, TaskPriority priority) {
+    public Optional<TaskDto> changeTaskPriority(UUID id, TaskPriority priority) {
         return taskRepository.findById(id)
                 .map(task -> {
                     task.setPriority(priority);
@@ -178,7 +180,7 @@ public class TaskServiceImpl implements TaskService {
     
     private TaskDto convertToDto(Task task) {
         TaskDto dto = new TaskDto();
-        dto.setId(task.getId());
+        dto.setId(task.getId().toString());
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
         dto.setStatus(task.getStatus());
