@@ -167,6 +167,20 @@ public class TaskController {
         }
     }
     
+    // Change task status with validation (logical state transitions)
+    @PatchMapping("/{id}/status-with-validation")
+    public ResponseEntity<TaskDto> changeTaskStatusWithValidation(@PathVariable String id, 
+                                                                @RequestParam TaskStatus status, @RequestHeader("Authorization") String token) {
+        try {
+            UUID uuid = UUID.fromString(id);
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            TaskDto updatedTask = taskService.changeTaskStatusWithValidation(uuid, status, username);
+            return ResponseEntity.ok(updatedTask);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid task ID format: " + id);
+        }
+    }
+    
     // Change task priority
     @PatchMapping("/{id}/priority")
     public ResponseEntity<TaskDto> changeTaskPriority(@PathVariable String id, 

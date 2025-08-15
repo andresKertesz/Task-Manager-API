@@ -1,6 +1,6 @@
 # Task Manager API
 
-A Spring Boot REST API for managing tasks with a clean, layered architecture.
+A Spring Boot REST API for managing tasks with user authentication and authorization.
 
 ## Project Structure
 
@@ -92,6 +92,46 @@ src/main/java/com/akertesz/task_manager_api/
 - **Comprehensive CRUD**: Full CRUD operations for task management
 - **Advanced Queries**: Custom repository methods for complex task queries
 - **Statistics**: Task statistics and analytics endpoints
+- **User Authentication**: Secure user registration, login, and JWT-based authentication
+- **Task Status Management**: Logical state transitions for tasks to prevent invalid states
+
+## Task Status Management
+
+The API now includes logical state transitions for tasks, ensuring that tasks can only move to valid states based on their current status.
+
+### State Transition Rules
+
+- **PENDING** → IN_PROGRESS, COMPLETED, or CANCELLED
+- **IN_PROGRESS** → COMPLETED, CANCELLED, or back to PENDING
+- **COMPLETED** → No transitions allowed (final state)
+- **CANCELLED** → Can be reactivated to PENDING or IN_PROGRESS
+
+### Usage
+
+Use the new `changeTaskStatusWithValidation` endpoint to ensure logical state transitions:
+
+```http
+PUT /api/tasks/{id}/status-with-validation
+Content-Type: application/json
+Authorization: Bearer {jwt-token}
+
+{
+  "status": "IN_PROGRESS"
+}
+```
+
+This endpoint will:
+- Validate that the requested status change is logically valid
+- Prevent invalid transitions (e.g., trying to change a COMPLETED task)
+- Provide clear error messages explaining allowed transitions
+- Maintain data integrity and business logic consistency
+
+### Examples
+
+- ✅ A PENDING task can be started (→ IN_PROGRESS)
+- ✅ An IN_PROGRESS task can be completed (→ COMPLETED)
+- ❌ A COMPLETED task cannot be changed (it's done!)
+- ✅ A CANCELLED task can be reactivated (→ PENDING)
 
 ## Getting Started
 

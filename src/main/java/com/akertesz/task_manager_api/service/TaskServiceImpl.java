@@ -15,6 +15,7 @@ import com.akertesz.task_manager_api.dto.TaskDto;
 import com.akertesz.task_manager_api.dto.UpdateTaskRequest;
 import com.akertesz.task_manager_api.exception.TaskNotFoundException;
 import com.akertesz.task_manager_api.exception.UserNotFoundException;
+import com.akertesz.task_manager_api.exception.InvalidRequestException;
 import com.akertesz.task_manager_api.model.Task;
 import com.akertesz.task_manager_api.model.TaskPriority;
 import com.akertesz.task_manager_api.model.TaskStatus;
@@ -205,6 +206,113 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(status);
         Task updatedTask = taskRepository.save(task);
         return convertToDto(updatedTask);
+    }
+    
+    /**
+     * Changes task status with logical state transition validation.
+     * 
+     * This method implements a state machine that ensures tasks can only transition
+     * to valid states based on their current status:
+     * 
+     * State Transition Rules:
+     * - PENDING → IN_PROGRESS, COMPLETED, or CANCELLED
+     * - IN_PROGRESS → COMPLETED, CANCELLED, or back to PENDING
+     * - COMPLETED → No transitions allowed (final state)
+     * - CANCELLED → Can be reactivated to PENDING or IN_PROGRESS
+     * 
+     * Examples:
+     * - A PENDING task can be started (→ IN_PROGRESS), completed (→ COMPLETED), or cancelled (→ CANCELLED)
+     * - An IN_PROGRESS task can be completed (→ COMPLETED), cancelled (→ CANCELLED), or put on hold (→ PENDING)
+     * - A COMPLETED task cannot be changed (it's done!)
+     * - A CANCELLED task can be reactivated (→ PENDING or IN_PROGRESS)
+     * 
+     * @param id Task ID
+     * @param newStatus The desired new status
+     * @param username Username for authentication
+     * @return Updated TaskDto
+     * @throws InvalidRequestException if the status transition is not allowed
+     */
+    @Override
+    public TaskDto changeTaskStatusWithValidation(UUID id, TaskStatus newStatus, String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + username);
+        }
+        
+        Task task = taskRepository.findByIdAndUserAndIsDeletedFalse(id, user)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        
+        TaskStatus currentStatus = task.getStatus();
+        
+        // Validate state transition
+        if (!isValidStatusTransition(currentStatus, newStatus)) {
+            throw new InvalidRequestException(
+                String.format("Invalid status transition from %s to %s. Allowed transitions: %s", 
+                    currentStatus, newStatus, getValidTransitions(currentStatus))
+            );
+        }
+        
+        // Apply the new status
+        task.setStatus(newStatus);
+        
+        // Note: Task completion and cancellation dates are not currently stored in the Task model
+        // The status change is sufficient to track the current state
+        
+        Task updatedTask = taskRepository.save(task);
+        return convertToDto(updatedTask);
+    }
+    
+    /**
+     * Validates if a status transition is allowed based on the current status
+     */
+    private boolean isValidStatusTransition(TaskStatus currentStatus, TaskStatus newStatus) {
+        if (currentStatus == newStatus) {
+            return true; // No change needed
+        }
+        
+        switch (currentStatus) {
+            case PENDING:
+                // PENDING tasks can move to IN_PROGRESS, COMPLETED, or CANCELLED
+                return newStatus == TaskStatus.IN_PROGRESS || 
+                       newStatus == TaskStatus.COMPLETED || 
+                       newStatus == TaskStatus.CANCELLED;
+                       
+            case IN_PROGRESS:
+                // IN_PROGRESS tasks can move to COMPLETED, CANCELLED, or back to PENDING
+                return newStatus == TaskStatus.COMPLETED || 
+                       newStatus == TaskStatus.CANCELLED || 
+                       newStatus == TaskStatus.PENDING;
+                       
+            case COMPLETED:
+                // COMPLETED tasks are final - cannot change to other statuses
+                return false;
+                
+            case CANCELLED:
+                // CANCELLED tasks can be reactivated to PENDING or IN_PROGRESS
+                return newStatus == TaskStatus.PENDING || 
+                       newStatus == TaskStatus.IN_PROGRESS;
+                       
+            default:
+                return false;
+        }
+    }
+    
+    /**
+     * Returns a list of valid status transitions for the current status
+     */
+    private String getValidTransitions(TaskStatus currentStatus) {
+        switch (currentStatus) {
+            case PENDING:
+                return "IN_PROGRESS, COMPLETED, CANCELLED";
+            case IN_PROGRESS:
+                return "COMPLETED, CANCELLED, PENDING";
+            case COMPLETED:
+                return "No transitions allowed (final state)";
+            case CANCELLED:
+                return "PENDING, IN_PROGRESS";
+            default:
+                return "Unknown status";
+        }
     }
     
     @Override

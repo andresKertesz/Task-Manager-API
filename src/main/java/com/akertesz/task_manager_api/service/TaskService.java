@@ -48,6 +48,9 @@ public interface TaskService {
     // Change task status
     TaskDto changeTaskStatus(UUID id, TaskStatus status, String username);
     
+    // Change task status with validation (logical state transitions)
+    TaskDto changeTaskStatusWithValidation(UUID id, TaskStatus status, String username);
+    
     // Change task priority
     TaskDto changeTaskPriority(UUID id, TaskPriority priority, String username);
     
