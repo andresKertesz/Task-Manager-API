@@ -129,6 +129,9 @@ public class TaskController {
     // Search tasks by title
     @GetMapping("/search")
     public ResponseEntity<List<TaskDto>> searchTasksByTitle(@RequestParam String title, @RequestHeader("Authorization") String token) {
+        if (title == null || title.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         List<TaskDto> tasks = taskService.searchTasksByTitle(title, username);
         return ResponseEntity.ok(tasks);

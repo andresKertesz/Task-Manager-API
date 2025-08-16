@@ -14,6 +14,7 @@ public class CreateTaskRequest {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
     
+    @jakarta.validation.constraints.NotNull(message = "Priority is required")
     private TaskPriority priority;
     
     private LocalDateTime dueDate;

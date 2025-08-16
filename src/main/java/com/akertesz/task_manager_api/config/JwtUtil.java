@@ -53,23 +53,34 @@ public class JwtUtil {
     }
 
     public String generateToken(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
         Map<String, Object> claims = new HashMap<>();
         claims.put("username", username);
         return createToken(claims, username);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
+        long expirationTime = expiration != null ? expiration : 86400000L; // Default to 24 hours
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey())
                 .compact();
     }
 
     public Boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        if (token == null || username == null) {
+            return false;
+        }
+        try {
+            final String extractedUsername = extractUsername(token);
+            return (extractedUsername.equals(username) && !isTokenExpired(token));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

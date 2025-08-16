@@ -47,7 +47,7 @@ public class User implements UserDetails {
 
     @Version
     @Column(nullable = false)
-    private Long version = 0L;
+    private Long version;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Task> tasks;

@@ -35,13 +35,29 @@ public class UserService {
     private AuthenticationManager authenticationManager;
     
     public LoginResponse login(LoginRequest loginRequest) {
+        // Validate input parameters
+        if (loginRequest == null) {
+            throw new IllegalArgumentException("LoginRequest cannot be null");
+        }
+        
+        String username = loginRequest.getUsername();
+        String password = loginRequest.getPassword();
+        
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        
         try {
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(username, password)
             );
             
             if (authentication.isAuthenticated()) {
-                String token = jwtUtil.generateToken(loginRequest.getUsername());
+                String token = jwtUtil.generateToken(username);
                 return new LoginResponse(Optional.of(token), "Login successful");
             } else {
                 throw new BadCredentialsException("Authentication failed");
@@ -54,21 +70,42 @@ public class UserService {
     }
 
     public LoginResponse register(RegisterRequest registerRequest) {
+        // Validate input parameters
+        if (registerRequest == null) {
+            throw new IllegalArgumentException("RegisterRequest cannot be null");
+        }
+        
+        String username = registerRequest.getUsername();
+        String email = registerRequest.getEmail();
+        String password = registerRequest.getPassword();
+        
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        
         // Check if user already exists
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
+        if (userRepository.existsByUsername(username)) {
             throw new InvalidRequestException("Username already exists");
         }
         
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+        if (userRepository.existsByEmail(email)) {
             throw new InvalidRequestException("Email already exists");
         }
         
         // Create new user
         User user = new User();
         user.setId(UUID.randomUUID());
-        user.setUsername(registerRequest.getUsername());
-        user.setEmail(registerRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
         user.setVersion(0L);
         userRepository.save(user);
         

@@ -364,8 +364,12 @@ public class TaskServiceImpl implements TaskService {
     }
     
     private TaskDto convertToDto(Task task) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task cannot be null");
+        }
+        
         TaskDto dto = new TaskDto();
-        dto.setId(task.getId().toString());
+        dto.setId(task.getId() != null ? task.getId().toString() : null);
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
         dto.setStatus(task.getStatus());

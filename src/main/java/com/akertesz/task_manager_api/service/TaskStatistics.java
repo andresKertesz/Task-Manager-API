@@ -22,6 +22,13 @@ public class TaskStatistics {
     public TaskStatistics(long totalTasks, long completedTasks, long pendingTasks, 
                          long inProgressTasks, long cancelledTasks, long overdueTasks,
                          Map<TaskStatus, Long> tasksByStatus, Map<TaskPriority, Long> tasksByPriority) {
+        if (tasksByStatus == null) {
+            throw new NullPointerException("tasksByStatus cannot be null");
+        }
+        if (tasksByPriority == null) {
+            throw new NullPointerException("tasksByPriority cannot be null");
+        }
+        
         this.totalTasks = totalTasks;
         this.completedTasks = completedTasks;
         this.pendingTasks = pendingTasks;
