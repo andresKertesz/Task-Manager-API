@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -132,6 +133,21 @@ public class GlobalExceptionHandler {
         );
         
         return ResponseEntity.badRequest().body(errorResponse);
+    }
+    
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(
+            HttpMediaTypeNotSupportedException ex, WebRequest request) {
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
+            "Unsupported media type: " + ex.getContentType(),
+            request.getDescription(false),
+            null
+        );
+        
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorResponse);
     }
     
     @ExceptionHandler(IllegalArgumentException.class)

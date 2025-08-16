@@ -63,11 +63,18 @@ public class JwtUtil {
 
     private String createToken(Map<String, Object> claims, String subject) {
         long expirationTime = expiration != null ? expiration : 86400000L; // Default to 24 hours
+        // Add a small delay to ensure token uniqueness in rapid succession
+        long currentTime = System.currentTimeMillis();
+        try {
+            Thread.sleep(1); // 1ms delay to ensure uniqueness
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .issuedAt(new Date(currentTime))
+                .expiration(new Date(currentTime + expirationTime))
                 .signWith(getSigningKey())
                 .compact();
     }

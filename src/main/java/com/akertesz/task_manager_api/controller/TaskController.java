@@ -104,18 +104,28 @@ public class TaskController {
     
     // Get tasks by status
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<TaskDto>> getTasksByStatus(@PathVariable TaskStatus status, @RequestHeader("Authorization") String token) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<TaskDto> tasks = taskService.getTasksByStatus(status, username);
-        return ResponseEntity.ok(tasks);
+    public ResponseEntity<List<TaskDto>> getTasksByStatus(@PathVariable String status, @RequestHeader("Authorization") String token) {
+        try {
+            TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            List<TaskDto> tasks = taskService.getTasksByStatus(taskStatus, username);
+            return ResponseEntity.ok(tasks);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status: " + status);
+        }
     }
     
     // Get tasks by priority
     @GetMapping("/priority/{priority}")
-    public ResponseEntity<List<TaskDto>> getTasksByPriority(@PathVariable TaskPriority priority, @RequestHeader("Authorization") String token) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<TaskDto> tasks = taskService.getTasksByPriority(priority, username);
-        return ResponseEntity.ok(tasks);
+    public ResponseEntity<List<TaskDto>> getTasksByPriority(@PathVariable String priority, @RequestHeader("Authorization") String token) {
+        try {
+            TaskPriority taskPriority = TaskPriority.valueOf(priority.toUpperCase());
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            List<TaskDto> tasks = taskService.getTasksByPriority(taskPriority, username);
+            return ResponseEntity.ok(tasks);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid priority: " + priority);
+        }
     }
     
     // Get overdue tasks
@@ -128,9 +138,15 @@ public class TaskController {
     
     // Search tasks by title
     @GetMapping("/search")
-    public ResponseEntity<List<TaskDto>> searchTasksByTitle(@RequestParam String title, @RequestHeader("Authorization") String token) {
-        if (title == null || title.trim().isEmpty()) {
+    public ResponseEntity<List<TaskDto>> searchTasksByTitle(@RequestParam(required = false) String title, @RequestHeader("Authorization") String token) {
+        if (title == null) {
             return ResponseEntity.badRequest().build();
+        }
+        if (title.trim().isEmpty()) {
+            // Empty title should return empty list, not error
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            List<TaskDto> tasks = taskService.searchTasksByTitle(title, username);
+            return ResponseEntity.ok(tasks);
         }
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         List<TaskDto> tasks = taskService.searchTasksByTitle(title, username);
@@ -159,42 +175,45 @@ public class TaskController {
     // Change task status
     @PatchMapping("/{id}/status")
     public ResponseEntity<TaskDto> changeTaskStatus(@PathVariable String id, 
-                                                  @RequestParam TaskStatus status, @RequestHeader("Authorization") String token) {
+                                                  @RequestParam String status, @RequestHeader("Authorization") String token) {
         try {
             UUID uuid = UUID.fromString(id);
+            TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            TaskDto updatedTask = taskService.changeTaskStatus(uuid, status, username);
+            TaskDto updatedTask = taskService.changeTaskStatus(uuid, taskStatus, username);
             return ResponseEntity.ok(updatedTask);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid task ID format: " + id);
+            throw new IllegalArgumentException("Invalid task ID format or status: " + id + ", " + status);
         }
     }
     
     // Change task status with validation (logical state transitions)
     @PatchMapping("/{id}/status-with-validation")
     public ResponseEntity<TaskDto> changeTaskStatusWithValidation(@PathVariable String id, 
-                                                                @RequestParam TaskStatus status, @RequestHeader("Authorization") String token) {
+                                                                @RequestParam String status, @RequestHeader("Authorization") String token) {
         try {
             UUID uuid = UUID.fromString(id);
+            TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            TaskDto updatedTask = taskService.changeTaskStatusWithValidation(uuid, status, username);
+            TaskDto updatedTask = taskService.changeTaskStatusWithValidation(uuid, taskStatus, username);
             return ResponseEntity.ok(updatedTask);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid task ID format: " + id);
+            throw new IllegalArgumentException("Invalid task ID format or status: " + id + ", " + status);
         }
     }
     
     // Change task priority
     @PatchMapping("/{id}/priority")
     public ResponseEntity<TaskDto> changeTaskPriority(@PathVariable String id, 
-                                                     @RequestParam TaskPriority priority, @RequestHeader("Authorization") String token ) {
+                                                     @RequestParam String priority, @RequestHeader("Authorization") String token ) {
         try {
             UUID uuid = UUID.fromString(id);
+            TaskPriority taskPriority = TaskPriority.valueOf(priority.toUpperCase());
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            TaskDto updatedTask = taskService.changeTaskPriority(uuid, priority, username);
+            TaskDto updatedTask = taskService.changeTaskPriority(uuid, taskPriority, username);
             return ResponseEntity.ok(updatedTask);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid task ID format: " + id);
+            throw new IllegalArgumentException("Invalid task ID format or priority: " + id + ", " + priority);
         }
     }
     

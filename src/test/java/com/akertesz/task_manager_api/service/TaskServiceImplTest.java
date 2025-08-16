@@ -1,19 +1,26 @@
 package com.akertesz.task_manager_api.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.akertesz.task_manager_api.dto.CreateTaskRequest;
@@ -759,6 +766,7 @@ class TaskServiceImplTest {
         when(userRepository.findByUsername(username)).thenReturn(testUser);
         when(taskRepository.findByIdAndUserAndIsDeletedFalse(taskId, testUser))
                 .thenReturn(Optional.of(testTask));
+        when(taskRepository.save(any(Task.class))).thenReturn(testTask);
 
         // Act
         TaskDto result = taskService.changeTaskStatusWithValidation(taskId, TaskStatus.PENDING, username);

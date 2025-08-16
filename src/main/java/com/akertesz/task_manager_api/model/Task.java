@@ -8,12 +8,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Version;
 
 @Entity
@@ -59,8 +57,7 @@ public class Task {
     
     // Default constructor
     public Task() {
-        this.createdAt = LocalDateTime.now();
-        // Remove default values to match test expectations
+        // No default values to allow proper initialization
     }
     
     // Getters and Setters
